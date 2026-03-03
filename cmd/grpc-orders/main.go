@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/aclgo/grpc-orders/config"
 	"github.com/aclgo/grpc-orders/internal/orders/delivery/grpc/service"
@@ -37,6 +38,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed sqlx.Open %v", err)
 	}
+
+	db.SetMaxIdleConns(15)
+	db.SetMaxOpenConns(25)
+	db.SetConnMaxLifetime(time.Minute * 5)
 
 	if cfg.MigrationRun {
 		migrations.SetAppMigrations(db, nil)
