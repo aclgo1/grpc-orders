@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	Path       string
-	ServerPort string `mapstructure:"SERVER_PORT"`
-	DBConfig   `mapstructure:",squash"`
+	Path          string
+	ServerPort    string `mapstructure:"SERVER_PORT"`
+	PathPublicPem string `mapstructure:"PATH_PUBLIC_PEM"`
+	DBConfig      `mapstructure:",squash"`
 }
 
 type DBConfig struct {

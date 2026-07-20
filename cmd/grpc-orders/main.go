@@ -15,6 +15,7 @@ import (
 	"github.com/aclgo/grpc-orders/internal/orders/repository"
 	"github.com/aclgo/grpc-orders/internal/orders/usecase"
 	"github.com/aclgo/grpc-orders/migrations"
+	"github.com/aclgo/grpc-orders/pkg/grpc_auth"
 	"github.com/aclgo/grpc-orders/proto"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -55,12 +56,18 @@ func main() {
 	orderUC := usecase.NewOrderUseCase(repo)
 	serviceGRPC := service.NewServiceGprc(orderUC)
 
+	auth := grpc_auth.NewGrpcAuth(cfg)
+
 	l, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.ServerPort))
 	if err != nil {
 		log.Fatalf("net.Listener: %v", err)
 	}
 
-	server := grpc.NewServer()
+	opts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(auth.AuthInterceptor),
+	}
+
+	server := grpc.NewServer(opts...)
 
 	proto.RegisterServiceOrderServer(server, serviceGRPC)
 
