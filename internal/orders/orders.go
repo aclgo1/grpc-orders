@@ -2,6 +2,7 @@ package orders
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -18,7 +19,7 @@ type UseCase interface {
 	) ([]*ParamFindOrderByAccountResult, error)
 
 	FindOrderByProduct(context.Context, *ParamFindOrderByProduct,
-	) (*ParamFindOrderByProductResult, error)
+	) ([]*ParamFindOrderByProductResult, error)
 }
 
 type Repository interface {
@@ -29,13 +30,49 @@ type Repository interface {
 	) ([]*models.ParamFindOrderByAccountResult, error)
 
 	FindOrderByProduct(context.Context, *models.ParamFindOrderByProduct,
-	) (*models.ParamFindOrderByProductResult, error)
+	) ([]*models.ParamFindOrderByProductResult, error)
 }
 
 type ParamCreateOrder struct {
-	AccountID   string
-	ProductsIDS []string
+	AccountID            string          
+	Type                 string         
+	Amount               int64           
+	PaymentMethod        string          
+	Status               string        
+	Metadata             any            
+	GatewayTransactionID string        
+	PixQRCode            string        
+	PixExpiration        time.Time     
+	CardToken            string        
+	CardExpiration       string         
+	BoletoURL            string        
+	BoletoBarcode        string         
+	BoletoExpiration     time.Time      
 }
+
+type ParamCreateOrderResult struct {
+	OrderID              string         
+	AccountID            string         
+	Type                 string          
+	Amount               int64           
+	PaymentMethod        string          
+	Status               string          
+	Metadata             json.RawMessage 
+	GatewayTransactionID string         
+	PixQRCode            string         
+	PixExpiration        time.Time      
+	CardToken            string        
+	CardExpiration       string         
+	BoletoURL            string         
+	BoletoBarcode        string         
+	BoletoExpiration     time.Time     
+	CreatedAt            time.Time       
+	UpdatedAt            time.Time      
+}
+
+type ParamFindOrderResult = ParamCreateOrderResult
+type ParamFindOrderByAccountResult = ParamCreateOrderResult
+type ParamFindOrderByProductResult = ParamCreateOrderResult
 
 func (p *ParamCreateOrder) Validate() error {
 	if p.AccountID == "" {
@@ -47,19 +84,14 @@ func (p *ParamCreateOrder) Validate() error {
 		return fmt.Errorf("account uuid invalid: %w", err)
 	}
 
-	if len(p.ProductsIDS) <= 0 {
-		return fmt.Errorf("product ids empty")
-	}
+	// if len(p.ProductsIDS) <= 0 {
+	// 	return fmt.Errorf("product ids empty")
+	// }
 
 	return nil
 }
 
-type ParamCreateOrderResult struct {
-	OrderID     string
-	AccountID   string
-	ProductsIDS []string
-	CreatedAT   time.Time
-}
+
 
 type ParamFindOrder struct {
 	OrderID string
@@ -77,12 +109,6 @@ func (p *ParamFindOrder) Validate() error {
 	return nil
 }
 
-type ParamFindOrderResult struct {
-	OrderID     string
-	AccountID   string
-	ProductsIDS []string
-	CreatedAT   time.Time
-}
 
 type ParamFindOrderByAccount struct {
 	AccountID string
@@ -101,12 +127,6 @@ func (p *ParamFindOrderByAccount) Validate() error {
 	return nil
 }
 
-type ParamFindOrderByAccountResult struct {
-	OrderID     string
-	AccountID   string
-	ProductsIDS []string
-	CreatedAT   time.Time
-}
 
 type ParamFindOrderByProduct struct {
 	ProductID string
@@ -124,9 +144,3 @@ func (p *ParamFindOrderByProduct) Validate() error {
 	return nil
 }
 
-type ParamFindOrderByProductResult struct {
-	OrderID     string
-	AccountID   string
-	ProductsIDS []string
-	CreatedAT   time.Time
-}

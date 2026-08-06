@@ -17,6 +17,9 @@ import (
 	"github.com/aclgo/grpc-orders/migrations"
 	"github.com/aclgo/grpc-orders/pkg/grpc_auth"
 	"github.com/aclgo/grpc-orders/proto"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
@@ -44,13 +47,38 @@ func main() {
 	db.SetMaxOpenConns(25)
 	db.SetConnMaxLifetime(time.Minute * 5)
 
-	if cfg.MigrationRun {
-		migrations.SetAppMigrations(db, nil)
-
-		if err := migrations.Run(); err != nil {
-			log.Fatalln(err)
-		}
+	srcDriver, err := iofs.New(migrations.MigrateUsingGolangMigrateFs, ".")
+	if err != nil {
+		log.Fatalf("iofs.New: %v\n",err)
 	}
+
+	dbDriver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+	if err != nil {
+		log.Fatalf("postgres.NewIstance: %v\n",err)
+	}
+
+	m,err := migrate.NewWithInstance(
+		"iofs",
+		srcDriver,
+		"postgres",
+		dbDriver,
+	)
+
+	if err != nil {
+		log.Fatalf("migrate.NewWithInstance: %v\n",err)
+	}
+
+	if err := m.Up();err != nil && err != migrate.ErrNoChange{
+		log.Fatalf("up migrate: %v\n",err)
+	}
+
+	// if cfg.MigrationRun {
+	// 	migrations.SetAppMigrations(db, nil)
+
+	// 	if err := migrations.Run(); err != nil {
+	// 		log.Fatalln(err)
+	// 	}
+	// }
 
 	repo := repository.NewRepository(db)
 	orderUC := usecase.NewOrderUseCase(repo)

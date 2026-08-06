@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/aclgo/grpc-orders/internal/orders"
@@ -18,11 +19,21 @@ func NewServiceGprc(orderUC orders.UseCase) *serviceGrpc {
 	return &serviceGrpc{orderUC: orderUC}
 }
 
-func (s *serviceGrpc) Create(ctx context.Context, req *proto.ParamCreateOrderRequest,
-) (*proto.ParamCreateOrderResponse, error) {
+func (s *serviceGrpc) Create(ctx context.Context, req *proto.ParamCreateOrderRequest) (*proto.ParamCreateOrderResponse, error) {
+	var metadata any
+	if len(req.Metadata) > 0 {
+		_ = json.Unmarshal(req.Metadata, &metadata)
+	}
+
 	p := orders.ParamCreateOrder{
-		AccountID:   req.AccountID,
-		ProductsIDS: req.ProductsIDS,
+		AccountID:      req.AccountID,
+		Type:           req.Type.String(),
+		Amount:         req.Amount,
+		PaymentMethod:  req.PaymentMethod.String(),
+		Status:         req.Status.String(),
+		Metadata:       metadata,
+		CardToken:      req.CardToken,
+		CardExpiration: req.CardExpiration,
 	}
 
 	if err := p.Validate(); err != nil {
@@ -34,20 +45,17 @@ func (s *serviceGrpc) Create(ctx context.Context, req *proto.ParamCreateOrderReq
 		return nil, fmt.Errorf("s.orderUC.Create: %w", err)
 	}
 
-	r := proto.ParamCreateOrderResponse{
-		Order: &proto.Orders{
-			OrderID:     created.OrderID,
-			AccountID:   created.AccountID,
-			ProductsIDS: created.ProductsIDS,
-			CreatedAT:   timestamppb.New(created.CreatedAT),
-		},
+	pbOrder, err := toProtoOrderFromCreateResult(created)
+	if err != nil {
+		return nil, fmt.Errorf("toProtoOrderFromCreateResult: %w", err)
 	}
 
-	return &r, nil
+	return &proto.ParamCreateOrderResponse{
+		Order: pbOrder,
+	}, nil
 }
 
-func (s *serviceGrpc) Find(ctx context.Context, req *proto.ParamFindOrderRequest,
-) (*proto.ParamFindOrderResponse, error) {
+func (s *serviceGrpc) Find(ctx context.Context, req *proto.ParamFindOrderRequest) (*proto.ParamFindOrderResponse, error) {
 	p := orders.ParamFindOrder{OrderID: req.OrderID}
 
 	if err := p.Validate(); err != nil {
@@ -59,21 +67,17 @@ func (s *serviceGrpc) Find(ctx context.Context, req *proto.ParamFindOrderRequest
 		return nil, fmt.Errorf("s.orderUC.FindOrder: %w", err)
 	}
 
-	r := proto.ParamFindOrderResponse{
-		Order: &proto.Orders{
-			OrderID:     find.OrderID,
-			AccountID:   find.AccountID,
-			ProductsIDS: find.ProductsIDS,
-			CreatedAT:   timestamppb.New(find.CreatedAT),
-		},
+	pbOrder, err := toProtoOrderFromFindResult(find)
+	if err != nil {
+		return nil, fmt.Errorf("toProtoOrderFromFindResult: %w", err)
 	}
 
-	return &r, nil
+	return &proto.ParamFindOrderResponse{
+		Order: pbOrder,
+	}, nil
 }
 
-func (s *serviceGrpc) FindOrderByAccount(ctx context.Context, req *proto.ParamFindOrderByAccountRequest,
-) (*proto.ParamFindOrderByAccountResponse, error) {
-
+func (s *serviceGrpc) FindOrderByAccount(ctx context.Context, req *proto.ParamFindOrderByAccountRequest) (*proto.ParamFindOrderByAccountResponse, error) {
 	p := orders.ParamFindOrderByAccount{
 		AccountID: req.AccountID,
 	}
@@ -82,33 +86,26 @@ func (s *serviceGrpc) FindOrderByAccount(ctx context.Context, req *proto.ParamFi
 		return nil, fmt.Errorf("p.Validate: %w", err)
 	}
 
-	find, err := s.orderUC.FindOrderByAccount(ctx, &p)
+	finds, err := s.orderUC.FindOrderByAccount(ctx, &p)
 	if err != nil {
 		return nil, fmt.Errorf("s.orderUC.FindOrderByAccount: %w", err)
 	}
 
-	var orders []*proto.Orders
-
-	for _, f := range find {
-		order := proto.Orders{
-			OrderID:     f.OrderID,
-			AccountID:   f.AccountID,
-			ProductsIDS: f.ProductsIDS,
-			CreatedAT:   timestamppb.New(f.CreatedAT),
+	var pbOrders []*proto.Orders
+	for _, f := range finds {
+		pbOrder, err := toProtoOrderFromAccountResult(f)
+		if err != nil {
+			return nil, fmt.Errorf("toProtoOrderFromAccountResult: %w", err)
 		}
-
-		orders = append(orders, &order)
+		pbOrders = append(pbOrders, pbOrder)
 	}
 
-	var results proto.ParamFindOrderByAccountResponse
-	results.Orders = append(results.Orders, orders...)
-
-	return &results, nil
+	return &proto.ParamFindOrderByAccountResponse{
+		Orders: pbOrders,
+	}, nil
 }
 
-func (s *serviceGrpc) FindOrderByProduct(ctx context.Context, req *proto.ParamFindOrderByProductRequest,
-) (*proto.ParamFindOrderByProductResponse, error) {
-
+func (s *serviceGrpc) FindOrderByProduct(ctx context.Context, req *proto.ParamFindOrderByProductRequest) (*proto.ParamFindOrderByProductResponse, error) {
 	p := orders.ParamFindOrderByProduct{
 		ProductID: req.ProductID,
 	}
@@ -117,21 +114,117 @@ func (s *serviceGrpc) FindOrderByProduct(ctx context.Context, req *proto.ParamFi
 		return nil, fmt.Errorf("p.Validate: %w", err)
 	}
 
-	find, err := s.orderUC.FindOrderByProduct(ctx, &p)
+	finds, err := s.orderUC.FindOrderByProduct(ctx, &p)
 	if err != nil {
 		return nil, fmt.Errorf("s.orderUC.FindOrderByProduct: %w", err)
 	}
 
-	var result proto.ParamFindOrderByProductResponse
-
-	order := proto.Orders{
-		OrderID:     find.OrderID,
-		AccountID:   find.AccountID,
-		ProductsIDS: find.ProductsIDS,
-		CreatedAT:   timestamppb.New(find.CreatedAT),
+	var pbOrders []*proto.Orders
+	for _, f := range finds {
+		pbOrder, err := toProtoOrderFromProductResult(f)
+		if err != nil {
+			return nil, fmt.Errorf("toProtoOrderFromProductResult: %w", err)
+		}
+		pbOrders = append(pbOrders, pbOrder)
 	}
 
-	result.Order = &order
+	return &proto.ParamFindOrderByProductResponse{
+		Orders: pbOrders,
+	}, nil
+}
 
-	return &result, nil
+func toProtoOrderFromCreateResult(res *orders.ParamCreateOrderResult) (*proto.Orders, error) {
+	metaBytes, _ := json.Marshal(res.Metadata)
+
+	return &proto.Orders{
+		OrderID:              res.OrderID,
+		AccountID:            res.AccountID,
+		Type:                 proto.OrderType(proto.OrderType_value[res.Type]),
+		Amount:               res.Amount,
+		PaymentMethod:        proto.PaymentMethod(proto.PaymentMethod_value[res.PaymentMethod]),
+		Status:               proto.OrderStatus(proto.OrderStatus_value[res.Status]),
+		Metadata:             metaBytes,
+		GatewayTransactionID: res.GatewayTransactionID,
+		PixQRCode:           res.PixQRCode,
+		PixExpiration:        timestamppb.New(res.PixExpiration),
+		CardToken:            res.CardToken,
+		CardExpiration:      res.CardExpiration,
+		BoletoURL:           res.BoletoURL,
+		BoletoBarcode:       res.BoletoBarcode,
+		BoletoExpiration:     timestamppb.New(res.BoletoExpiration),
+		CreatedAT:            timestamppb.New(res.CreatedAt),
+		UpdatedAT:            timestamppb.New(res.UpdatedAt),
+	}, nil
+}
+
+func toProtoOrderFromFindResult(res *orders.ParamFindOrderResult) (*proto.Orders, error) {
+	metaBytes, _ := json.Marshal(res.Metadata)
+
+	return &proto.Orders{
+		OrderID:              res.OrderID,
+		AccountID:            res.AccountID,
+		Type:                 proto.OrderType(proto.OrderType_value[res.Type]),
+		Amount:               res.Amount,
+		PaymentMethod:        proto.PaymentMethod(proto.PaymentMethod_value[res.PaymentMethod]),
+		Status:               proto.OrderStatus(proto.OrderStatus_value[res.Status]),
+		Metadata:             metaBytes,
+		GatewayTransactionID: res.GatewayTransactionID,
+		PixQRCode:            res.PixQRCode,
+		PixExpiration:        timestamppb.New(res.PixExpiration),
+		CardToken:            res.CardToken,
+		CardExpiration:       res.CardExpiration,
+		BoletoURL:            res.BoletoURL,
+		BoletoBarcode:        res.BoletoBarcode,
+		BoletoExpiration:     timestamppb.New(res.BoletoExpiration),
+		CreatedAT:            timestamppb.New(res.CreatedAt),
+		UpdatedAT:            timestamppb.New(res.UpdatedAt),
+	}, nil
+}
+
+func toProtoOrderFromAccountResult(res *orders.ParamFindOrderByAccountResult) (*proto.Orders, error) {
+	metaBytes, _ := json.Marshal(res.Metadata)
+
+	return &proto.Orders{
+		OrderID:              res.OrderID,
+		AccountID:            res.AccountID,
+		Type:                 proto.OrderType(proto.OrderType_value[res.Type]),
+		Amount:               res.Amount,
+		PaymentMethod:        proto.PaymentMethod(proto.PaymentMethod_value[res.PaymentMethod]),
+		Status:               proto.OrderStatus(proto.OrderStatus_value[res.Status]),
+		Metadata:             metaBytes,
+		GatewayTransactionID: res.GatewayTransactionID,
+		PixQRCode:            res.PixQRCode,
+		PixExpiration:        timestamppb.New(res.PixExpiration),
+		CardToken:            res.CardToken,
+		CardExpiration:       res.CardExpiration,
+		BoletoURL:            res.BoletoURL,
+		BoletoBarcode:        res.BoletoBarcode,
+		BoletoExpiration:     timestamppb.New(res.BoletoExpiration),
+		CreatedAT:            timestamppb.New(res.CreatedAt),
+		UpdatedAT:            timestamppb.New(res.UpdatedAt),
+	}, nil
+}
+
+func toProtoOrderFromProductResult(res *orders.ParamFindOrderByProductResult) (*proto.Orders, error) {
+	metaBytes, _ := json.Marshal(res.Metadata)
+
+	return &proto.Orders{
+		OrderID:              res.OrderID,
+		AccountID:            res.AccountID,
+		Type:                 proto.OrderType(proto.OrderType_value[res.Type]),
+		Amount:               res.Amount,
+		PaymentMethod:        proto.PaymentMethod(proto.PaymentMethod_value[res.PaymentMethod]),
+		Status:               proto.OrderStatus(proto.OrderStatus_value[res.Status]),
+		Metadata:             metaBytes,
+		GatewayTransactionID: res.GatewayTransactionID,
+		PixQRCode:            res.PixQRCode,
+		PixExpiration:        timestamppb.New(res.PixExpiration),
+		CardToken:            res.CardToken,
+		CardExpiration:       res.CardExpiration,
+		BoletoURL:            res.BoletoURL,
+		BoletoBarcode:        res.BoletoBarcode,
+		BoletoExpiration:     timestamppb.New(res.BoletoExpiration),
+		CreatedAT:            timestamppb.New(res.CreatedAt),
+		UpdatedAT:            timestamppb.New(res.UpdatedAt),
+	}, nil
 }
