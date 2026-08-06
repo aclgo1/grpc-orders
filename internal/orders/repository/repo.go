@@ -194,7 +194,6 @@ func (r *repo) FindOrderByAccount(ctx context.Context, param *models.ParamFindOr
 }
 
 func (r *repo) FindOrderByProduct(ctx context.Context, param *models.ParamFindOrderByProduct) ([]*models.ParamFindOrderByProductResult, error) {
-	// Busca dentro do JSONB no campo metadata -> products
 	const query = `
 		SELECT 
 			order_id, account_id, type, amount, payment_method, status, metadata,
