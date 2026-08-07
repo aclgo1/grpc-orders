@@ -65,8 +65,18 @@ message ParamCreateOrderRequest {
     OrderStatus status           = 5;
     bytes metadata               = 6; 
 
-    string cardToken      = 7;
-    string cardExpiration = 8;
+    string gatewayTransactionID = 7;
+
+    string pixQRCode            = 8;
+    google.protobuf.Timestamp pixExpiration = 9;
+
+
+    string cardToken            = 10;
+    string cardExpiration       = 11;
+
+    string boletoURL            = 12;
+    string boletoBarcode        = 13;
+    google.protobuf.Timestamp boletoExpiration = 14;
 }
 
 message ParamCreateOrderResponse {

@@ -360,17 +360,23 @@ func (x *Orders) GetUpdatedAT() *timestamppb.Timestamp {
 }
 
 type ParamCreateOrderRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	AccountID      string                 `protobuf:"bytes,1,opt,name=accountID,proto3" json:"accountID,omitempty"`
-	Type           OrderType              `protobuf:"varint,2,opt,name=type,proto3,enum=proto.OrderType" json:"type,omitempty"`
-	Amount         int64                  `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	PaymentMethod  PaymentMethod          `protobuf:"varint,4,opt,name=paymentMethod,proto3,enum=proto.PaymentMethod" json:"paymentMethod,omitempty"`
-	Status         OrderStatus            `protobuf:"varint,5,opt,name=status,proto3,enum=proto.OrderStatus" json:"status,omitempty"`
-	Metadata       []byte                 `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	CardToken      string                 `protobuf:"bytes,7,opt,name=cardToken,proto3" json:"cardToken,omitempty"`
-	CardExpiration string                 `protobuf:"bytes,8,opt,name=cardExpiration,proto3" json:"cardExpiration,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	AccountID            string                 `protobuf:"bytes,1,opt,name=accountID,proto3" json:"accountID,omitempty"`
+	Type                 OrderType              `protobuf:"varint,2,opt,name=type,proto3,enum=proto.OrderType" json:"type,omitempty"`
+	Amount               int64                  `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	PaymentMethod        PaymentMethod          `protobuf:"varint,4,opt,name=paymentMethod,proto3,enum=proto.PaymentMethod" json:"paymentMethod,omitempty"`
+	Status               OrderStatus            `protobuf:"varint,5,opt,name=status,proto3,enum=proto.OrderStatus" json:"status,omitempty"`
+	Metadata             []byte                 `protobuf:"bytes,6,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	GatewayTransactionID string                 `protobuf:"bytes,7,opt,name=gatewayTransactionID,proto3" json:"gatewayTransactionID,omitempty"`
+	PixQRCode            string                 `protobuf:"bytes,8,opt,name=pixQRCode,proto3" json:"pixQRCode,omitempty"`
+	PixExpiration        *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=pixExpiration,proto3" json:"pixExpiration,omitempty"`
+	CardToken            string                 `protobuf:"bytes,10,opt,name=cardToken,proto3" json:"cardToken,omitempty"`
+	CardExpiration       string                 `protobuf:"bytes,11,opt,name=cardExpiration,proto3" json:"cardExpiration,omitempty"`
+	BoletoURL            string                 `protobuf:"bytes,12,opt,name=boletoURL,proto3" json:"boletoURL,omitempty"`
+	BoletoBarcode        string                 `protobuf:"bytes,13,opt,name=boletoBarcode,proto3" json:"boletoBarcode,omitempty"`
+	BoletoExpiration     *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=boletoExpiration,proto3" json:"boletoExpiration,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *ParamCreateOrderRequest) Reset() {
@@ -445,6 +451,27 @@ func (x *ParamCreateOrderRequest) GetMetadata() []byte {
 	return nil
 }
 
+func (x *ParamCreateOrderRequest) GetGatewayTransactionID() string {
+	if x != nil {
+		return x.GatewayTransactionID
+	}
+	return ""
+}
+
+func (x *ParamCreateOrderRequest) GetPixQRCode() string {
+	if x != nil {
+		return x.PixQRCode
+	}
+	return ""
+}
+
+func (x *ParamCreateOrderRequest) GetPixExpiration() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PixExpiration
+	}
+	return nil
+}
+
 func (x *ParamCreateOrderRequest) GetCardToken() string {
 	if x != nil {
 		return x.CardToken
@@ -457,6 +484,27 @@ func (x *ParamCreateOrderRequest) GetCardExpiration() string {
 		return x.CardExpiration
 	}
 	return ""
+}
+
+func (x *ParamCreateOrderRequest) GetBoletoURL() string {
+	if x != nil {
+		return x.BoletoURL
+	}
+	return ""
+}
+
+func (x *ParamCreateOrderRequest) GetBoletoBarcode() string {
+	if x != nil {
+		return x.BoletoBarcode
+	}
+	return ""
+}
+
+func (x *ParamCreateOrderRequest) GetBoletoExpiration() *timestamppb.Timestamp {
+	if x != nil {
+		return x.BoletoExpiration
+	}
+	return nil
 }
 
 type ParamCreateOrderResponse struct {
@@ -790,16 +838,23 @@ const file_orders_proto_rawDesc = "" +
 	"\rboletoBarcode\x18\x0e \x01(\tR\rboletoBarcode\x12F\n" +
 	"\x10boletoExpiration\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\x10boletoExpiration\x128\n" +
 	"\tcreatedAT\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAT\x128\n" +
-	"\tupdatedAT\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAT\"\xbf\x02\n" +
+	"\tupdatedAT\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAT\"\xdf\x04\n" +
 	"\x17ParamCreateOrderRequest\x12\x1c\n" +
 	"\taccountID\x18\x01 \x01(\tR\taccountID\x12$\n" +
 	"\x04type\x18\x02 \x01(\x0e2\x10.proto.OrderTypeR\x04type\x12\x16\n" +
 	"\x06amount\x18\x03 \x01(\x03R\x06amount\x12:\n" +
 	"\rpaymentMethod\x18\x04 \x01(\x0e2\x14.proto.PaymentMethodR\rpaymentMethod\x12*\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x12.proto.OrderStatusR\x06status\x12\x1a\n" +
-	"\bmetadata\x18\x06 \x01(\fR\bmetadata\x12\x1c\n" +
-	"\tcardToken\x18\a \x01(\tR\tcardToken\x12&\n" +
-	"\x0ecardExpiration\x18\b \x01(\tR\x0ecardExpiration\"?\n" +
+	"\bmetadata\x18\x06 \x01(\fR\bmetadata\x122\n" +
+	"\x14gatewayTransactionID\x18\a \x01(\tR\x14gatewayTransactionID\x12\x1c\n" +
+	"\tpixQRCode\x18\b \x01(\tR\tpixQRCode\x12@\n" +
+	"\rpixExpiration\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\rpixExpiration\x12\x1c\n" +
+	"\tcardToken\x18\n" +
+	" \x01(\tR\tcardToken\x12&\n" +
+	"\x0ecardExpiration\x18\v \x01(\tR\x0ecardExpiration\x12\x1c\n" +
+	"\tboletoURL\x18\f \x01(\tR\tboletoURL\x12$\n" +
+	"\rboletoBarcode\x18\r \x01(\tR\rboletoBarcode\x12F\n" +
+	"\x10boletoExpiration\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\x10boletoExpiration\"?\n" +
 	"\x18ParamCreateOrderResponse\x12#\n" +
 	"\x05order\x18\x01 \x01(\v2\r.proto.OrdersR\x05order\"1\n" +
 	"\x15ParamFindOrderRequest\x12\x18\n" +
@@ -880,23 +935,25 @@ var file_orders_proto_depIdxs = []int32{
 	0,  // 7: proto.ParamCreateOrderRequest.type:type_name -> proto.OrderType
 	1,  // 8: proto.ParamCreateOrderRequest.paymentMethod:type_name -> proto.PaymentMethod
 	2,  // 9: proto.ParamCreateOrderRequest.status:type_name -> proto.OrderStatus
-	3,  // 10: proto.ParamCreateOrderResponse.order:type_name -> proto.Orders
-	3,  // 11: proto.ParamFindOrderResponse.order:type_name -> proto.Orders
-	3,  // 12: proto.ParamFindOrderByAccountResponse.orders:type_name -> proto.Orders
-	3,  // 13: proto.ParamFindOrderByProductResponse.orders:type_name -> proto.Orders
-	4,  // 14: proto.ServiceOrder.Create:input_type -> proto.ParamCreateOrderRequest
-	6,  // 15: proto.ServiceOrder.Find:input_type -> proto.ParamFindOrderRequest
-	8,  // 16: proto.ServiceOrder.FindOrderByAccount:input_type -> proto.ParamFindOrderByAccountRequest
-	10, // 17: proto.ServiceOrder.FindOrderByProduct:input_type -> proto.ParamFindOrderByProductRequest
-	5,  // 18: proto.ServiceOrder.Create:output_type -> proto.ParamCreateOrderResponse
-	7,  // 19: proto.ServiceOrder.Find:output_type -> proto.ParamFindOrderResponse
-	9,  // 20: proto.ServiceOrder.FindOrderByAccount:output_type -> proto.ParamFindOrderByAccountResponse
-	11, // 21: proto.ServiceOrder.FindOrderByProduct:output_type -> proto.ParamFindOrderByProductResponse
-	18, // [18:22] is the sub-list for method output_type
-	14, // [14:18] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	12, // 10: proto.ParamCreateOrderRequest.pixExpiration:type_name -> google.protobuf.Timestamp
+	12, // 11: proto.ParamCreateOrderRequest.boletoExpiration:type_name -> google.protobuf.Timestamp
+	3,  // 12: proto.ParamCreateOrderResponse.order:type_name -> proto.Orders
+	3,  // 13: proto.ParamFindOrderResponse.order:type_name -> proto.Orders
+	3,  // 14: proto.ParamFindOrderByAccountResponse.orders:type_name -> proto.Orders
+	3,  // 15: proto.ParamFindOrderByProductResponse.orders:type_name -> proto.Orders
+	4,  // 16: proto.ServiceOrder.Create:input_type -> proto.ParamCreateOrderRequest
+	6,  // 17: proto.ServiceOrder.Find:input_type -> proto.ParamFindOrderRequest
+	8,  // 18: proto.ServiceOrder.FindOrderByAccount:input_type -> proto.ParamFindOrderByAccountRequest
+	10, // 19: proto.ServiceOrder.FindOrderByProduct:input_type -> proto.ParamFindOrderByProductRequest
+	5,  // 20: proto.ServiceOrder.Create:output_type -> proto.ParamCreateOrderResponse
+	7,  // 21: proto.ServiceOrder.Find:output_type -> proto.ParamFindOrderResponse
+	9,  // 22: proto.ServiceOrder.FindOrderByAccount:output_type -> proto.ParamFindOrderByAccountResponse
+	11, // 23: proto.ServiceOrder.FindOrderByProduct:output_type -> proto.ParamFindOrderByProductResponse
+	20, // [20:24] is the sub-list for method output_type
+	16, // [16:20] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_orders_proto_init() }
