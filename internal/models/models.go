@@ -62,3 +62,16 @@ type ParamFindOrderByProduct struct {
 
 type ParamFindOrderByProductResult = ParamCreateOrderResult
 
+type ParamUpdateOrderStatus struct {
+	OrderId string
+	Status string
+}
+
+type ParamUpdateOrderStatusResult = ParamCreateOrderResult
+
+type ParamGetOrderByGatewayTransactionId struct {
+	GatewayTransactionId string
+}
+
+type ParamGetOrderByGatewayTransactionIdResult = ParamCreateOrderResult
+

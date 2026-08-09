@@ -180,6 +180,76 @@ func (o *orderUseCase) FindOrderByProduct(ctx context.Context, param *orders.Par
 	return results, nil
 }
 
+func(u *orderUseCase)UpdateOrderStatus(ctx context.Context,
+	params *orders.ParamUpdateOrderStatus)(*orders.ParamUpdateOrderStatusResult,error){
+
+		pm := models.ParamUpdateOrderStatus{
+			OrderId: params.OrderId,
+			Status: params.Status,
+		}
+
+		updated, err := u.repo.UpdateOrderStatus(ctx, &pm)
+		if err != nil {
+			return nil,err
+		}
+
+		out := orders.ParamUpdateOrderStatusResult{
+			OrderID:			  updated.OrderID,
+			AccountID:			  updated.AccountID,
+			Type:				  updated.Type,
+			Amount:   			  updated.Amount,
+			PaymentMethod:		  updated.PaymentMethod,
+			Status:				  updated.Status,
+			Metadata:			  updated.Metadata,
+			GatewayTransactionID: strVal(updated.GatewayTransactionID),
+    	    PixQRCode:			  strVal(updated.PixQRCode),
+    	    PixExpiration:		  timeVal(updated.PixExpiration),
+    	    CardToken:			  strVal(updated.CardToken),
+    	    CardExpiration:       strVal(updated.CardExpiration),
+    	    BoletoURL:            strVal(updated.BoletoURL),
+    	    BoletoBarcode:        strVal(updated.BoletoBarcode),
+    	    BoletoExpiration:     timeVal(updated.BoletoExpiration),
+			CreatedAt: 			  updated.CreatedAt,
+			UpdatedAt: 			  updated.UpdatedAt,
+		}
+
+		return &out,nil
+	}
+func(u *orderUseCase)GetOrderByTransactionGatewayId(ctx context.Context,
+	params *orders.ParamFindOrderByGatewayTransactionId)(*orders.ParamFindOrderByGatewayTransactionIdResult,error){
+
+		pm := models.ParamGetOrderByGatewayTransactionId{
+			GatewayTransactionId: params.GatewayTrnasactionId,
+		}
+
+		find,err := u.repo.GetOrderByTransactionGatewayId(ctx, &pm)
+		if err != nil {
+			return nil, err
+		}
+
+		out := orders.ParamFindOrderByGatewayTransactionIdResult{
+			OrderID:			  find.OrderID,
+			AccountID:			  find.AccountID,
+			Type:				  find.Type,
+			Amount:   			  find.Amount,
+			PaymentMethod:		  find.PaymentMethod,
+			Status:				  find.Status,
+			Metadata:			  find.Metadata,
+			GatewayTransactionID: strVal(find.GatewayTransactionID),
+    	    PixQRCode:			  strVal(find.PixQRCode),
+    	    PixExpiration:		  timeVal(find.PixExpiration),
+    	    CardToken:			  strVal(find.CardToken),
+    	    CardExpiration:       strVal(find.CardExpiration),
+    	    BoletoURL:            strVal(find.BoletoURL),
+    	    BoletoBarcode:        strVal(find.BoletoBarcode),
+    	    BoletoExpiration:     timeVal(find.BoletoExpiration),
+			CreatedAt: 			  find.CreatedAt,
+			UpdatedAt: 			  find.UpdatedAt,
+		}
+
+		return &out,nil
+	}
+
 func strVal(s *string) string {
 	if s == nil {
 		return ""

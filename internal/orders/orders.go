@@ -20,6 +20,10 @@ type UseCase interface {
 
 	FindOrderByProduct(context.Context, *ParamFindOrderByProduct,
 	) ([]*ParamFindOrderByProductResult, error)
+		UpdateOrderStatus(ctx context.Context,
+	params *ParamUpdateOrderStatus)(*ParamUpdateOrderStatusResult,error)
+	GetOrderByTransactionGatewayId(ctx context.Context,
+	params *ParamFindOrderByGatewayTransactionId)(*ParamFindOrderByGatewayTransactionIdResult,error)
 }
 
 type Repository interface {
@@ -31,6 +35,10 @@ type Repository interface {
 
 	FindOrderByProduct(context.Context, *models.ParamFindOrderByProduct,
 	) ([]*models.ParamFindOrderByProductResult, error)
+	UpdateOrderStatus(ctx context.Context,
+	params *models.ParamUpdateOrderStatus)(*models.ParamUpdateOrderStatusResult,error)
+	GetOrderByTransactionGatewayId(ctx context.Context,
+	params *models.ParamGetOrderByGatewayTransactionId)(*models.ParamGetOrderByGatewayTransactionIdResult,error)
 }
 
 type ParamCreateOrder struct {
@@ -73,6 +81,8 @@ type ParamCreateOrderResult struct {
 type ParamFindOrderResult = ParamCreateOrderResult
 type ParamFindOrderByAccountResult = ParamCreateOrderResult
 type ParamFindOrderByProductResult = ParamCreateOrderResult
+type ParamFindOrderByGatewayTransactionIdResult = ParamCreateOrderResult
+type ParamUpdateOrderStatusResult = ParamCreateOrderResult 
 
 func (p *ParamCreateOrder) Validate() error {
 	if p.AccountID == "" {
@@ -141,6 +151,23 @@ func (p *ParamFindOrderByProduct) Validate() error {
 	if err != nil {
 		return fmt.Errorf("account uuid invalid: %w", err)
 	}
+	return nil
+}
+
+type ParamFindOrderByGatewayTransactionId struct {
+	GatewayTrnasactionId string
+}
+
+func (p *ParamFindOrderByGatewayTransactionId) Validate() error {
+	return nil
+}
+
+type ParamUpdateOrderStatus struct {
+	OrderId string
+	Status string
+}
+
+func (p *ParamUpdateOrderStatus) Validate() error {
 	return nil
 }
 

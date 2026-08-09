@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/aclgo/grpc-orders/internal/models"
@@ -246,4 +248,96 @@ func (r *repo) FindOrderByProduct(ctx context.Context, param *models.ParamFindOr
 	}
 
 	return results, nil
+}
+
+func(r *repo)GetOrderByTransactionGatewayId(ctx context.Context,
+	params *models.ParamGetOrderByGatewayTransactionId)(*models.ParamGetOrderByGatewayTransactionIdResult,error){
+
+	const query = `
+		SELECT 
+			order_id, account_id, type, amount, payment_method, status, metadata,
+			gateway_transaction_id, pix_qr_code, pix_expiration, card_token, card_expiration,
+			boleto_url, boleto_barcode, boleto_expiration, created_at, updated_at
+		FROM grpc_orders 
+		WHERE gateway_transaction_id = $1`
+
+	var o models.ParamGetOrderByGatewayTransactionIdResult
+	var metaRaw json.RawMessage
+
+	err := r.db.QueryRowxContext(ctx, query, &params.GatewayTransactionId).Scan(
+		&o.OrderID,
+		&o.AccountID,
+		&o.Type,
+		&o.Amount,
+		&o.PaymentMethod,
+		&o.Status,
+		&metaRaw,
+		&o.GatewayTransactionID,
+		&o.PixQRCode,
+		&o.PixExpiration,
+		&o.CardToken,
+		&o.CardExpiration,
+		&o.BoletoURL,
+		&o.BoletoBarcode,
+		&o.BoletoExpiration,
+		&o.CreatedAt,
+		&o.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("r.db.QueryRowxContext: %w",err)
+	}
+
+	o.Metadata = metaRaw
+
+	return &o,nil
+}
+
+
+func (r *repo) UpdateOrderStatus(ctx context.Context, params *models.ParamUpdateOrderStatus) (*models.ParamUpdateOrderStatusResult, error) {
+    const query = `
+        UPDATE grpc_orders
+        SET 
+            status = $1,
+            updated_at = NOW()
+        WHERE order_id = $2
+        RETURNING 
+            order_id, account_id, type, amount, payment_method, status, metadata,
+            gateway_transaction_id, pix_qr_code, pix_expiration, card_token, card_expiration,
+            boleto_url, boleto_barcode, boleto_expiration, created_at, updated_at
+    `
+
+    var updated models.ParamUpdateOrderStatusResult
+    var metaRaw json.RawMessage
+
+    err := r.db.QueryRowxContext(ctx, query, params.Status, params.OrderId).Scan(
+        &updated.OrderID,
+        &updated.AccountID,
+        &updated.Type,
+        &updated.Amount,
+        &updated.PaymentMethod,
+        &updated.Status,
+        &metaRaw,
+        &updated.GatewayTransactionID,
+        &updated.PixQRCode,
+        &updated.PixExpiration,
+        &updated.CardToken,
+        &updated.CardExpiration,
+        &updated.BoletoURL,
+        &updated.BoletoBarcode,
+        &updated.BoletoExpiration,
+        &updated.CreatedAt,
+        &updated.UpdatedAt,
+    )
+
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, fmt.Errorf("order not found: %w", err)
+        }
+        return nil, fmt.Errorf("r.db.QueryRowxContext: %w", err)
+    }
+
+    updated.Metadata = metaRaw
+
+    return &updated, nil
 }
