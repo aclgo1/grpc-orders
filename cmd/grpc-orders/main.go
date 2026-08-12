@@ -48,15 +48,17 @@ func main() {
 
 	srcDriver, err := iofs.New(migrations.MigrateUsingGolangMigrateFs, ".")
 	if err != nil {
-		log.Fatalf("iofs.New: %v\n",err)
+		log.Fatalf("iofs.New: %v\n", err)
 	}
 
-	dbDriver, err := postgres.WithInstance(db.DB, &postgres.Config{})
+	dbDriver, err := postgres.WithInstance(db.DB, &postgres.Config{
+		MigrationsTable: "schema_migrations_orders",
+	})
 	if err != nil {
-		log.Fatalf("postgres.NewIstance: %v\n",err)
+		log.Fatalf("postgres.NewIstance: %v\n", err)
 	}
 
-	m,err := migrate.NewWithInstance(
+	m, err := migrate.NewWithInstance(
 		"iofs",
 		srcDriver,
 		"postgres",
@@ -64,11 +66,11 @@ func main() {
 	)
 
 	if err != nil {
-		log.Fatalf("migrate.NewWithInstance: %v\n",err)
+		log.Fatalf("migrate.NewWithInstance: %v\n", err)
 	}
 
-	if err := m.Up();err != nil && err != migrate.ErrNoChange{
-		log.Fatalf("up migrate: %v\n",err)
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("up migrate: %v\n", err)
 	}
 
 	// if cfg.MigrationRun {
